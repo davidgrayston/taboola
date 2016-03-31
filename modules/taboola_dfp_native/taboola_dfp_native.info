@@ -1,7 +1,0 @@
-name = Taboola DFP Native
-description = Integration with DFP Taboola native
-package = Advertising
-core = 7.x
-dependencies[] = context
-dependencies[] = taboola
-dependencies[] = dfp
