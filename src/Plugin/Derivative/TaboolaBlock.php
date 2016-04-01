@@ -12,7 +12,7 @@ use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides block plugin definitions for mymodule blocks.
+ * Provides block plugin definitions for Taboola blocks.
  *
  * @see \Drupal\taboola\Plugin\Block\TaboolaBlock
  */
@@ -29,7 +29,7 @@ class TaboolaBlock extends DeriverBase implements ContainerDeriverInterface {
    * {@inheritdoc}
    */
   public function getDerivativeDefinitions($base_plugin_definition) {
-    // @todo get taboola block settings from exported entities. 
+    // @todo get taboola block settings from exported entities.
     $blocks = [
       'taboola_1' => 'Taboola 1',
       'taboola_2' => 'Taboola 2',
