@@ -9,6 +9,8 @@ namespace Drupal\taboola\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Config\ConfigFactory;
 
 /**
  * Provides a Taboola block.
@@ -18,7 +20,45 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
  *   admin_label = @Translation("Taboola"),
  * )
  */
-class TaboolaBlock extends BlockBase {
+class TaboolaBlock extends BlockBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
+   * Constructor for ContactBlock block class.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param string $plugin_definition
+   *   The plugin implementation definition.
+   * @param ConfigFactory $config_factory
+   *   The config factory.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ConfigFactory $config_factory) {
+    $this->configFactory = $config_factory;
+
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('config.factory')
+    );
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -29,32 +69,36 @@ class TaboolaBlock extends BlockBase {
     $form['mode'] = array(
       '#type' => 'textfield',
       '#title' => t('Mode'),
-      '#default_value' => isset($configuration['mode']) ? $configuration['mode'] : '',
+      '#required' => TRUE,
+      '#default_value' => !empty($configuration['mode']) ? $configuration['mode'] : '',
     );
 
     $form['placement'] = array(
       '#type' => 'textfield',
       '#title' => t('Placement'),
-      '#default_value' => isset($configuration['placement']) ? $configuration['placement'] : '',
+      '#required' => TRUE,
+      '#default_value' => !empty($configuration['placement']) ? $configuration['placement'] : '',
     );
 
     $form['target_type'] = array(
       '#type' => 'textfield',
       '#title' => t('Target Type'),
-      '#default_value' => isset($configuration['target_type']) ? $configuration['target_type'] : '',
+      '#required' => TRUE,
+      '#default_value' => !empty($configuration['target_type']) ? $configuration['target_type'] : '',
     );
 
     $form['container'] = array(
       '#type' => 'textfield',
       '#title' => t('Container'),
-      '#default_value' => isset($configuration['container']) ? $configuration['container'] : '',
+      '#required' => TRUE,
+      '#default_value' => !empty($configuration['container']) ? $configuration['container'] : '',
     );
 
     return $form;
   }
 
   /**
-   * Overrides \Drupal\block\BlockBase::blockSubmit().
+   * {@inheritdoc}
    */
   public function blockSubmit($form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $this->setConfigurationValue('mode', $form_state->getValue('mode'));
@@ -67,12 +111,25 @@ class TaboolaBlock extends BlockBase {
    * {@inheritdoc}
    */
   public function build() {
-    // @todo get taboola block settings from exported entities.
-    $block_id = $this->getDerivativeId();
+    $service_url = $this->configFactory->get('taboola.settings')->get('service_url');
+    if (empty($service_url)) {
+      return NULL;
+    }
+    $block_configuration = $this->getConfiguration();
     return [
-      '#markup' => 'Block ' . $block_id,
-      '#cache' => [
-        'contexts' => ['user.roles']
+      '#theme' => 'taboola',
+      '#container_id' => $block_configuration['container'],
+      '#attached' => [
+        'library' => ['taboola/taboola'],
+        'drupalSettings' => [
+          'taboola' => [
+            'service_url' => $service_url,
+            'mode' => $block_configuration['mode'],
+            'placement' => $block_configuration['placement'],
+            'target_type' => $block_configuration['target_type'],
+            'container' => $block_configuration['container'],
+          ]
+        ]
       ],
     ];
   }

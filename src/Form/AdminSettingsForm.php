@@ -49,17 +49,11 @@ class AdminSettingsForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Service URL'),
       '#description' => $this->t('Taboola service URL'),
+      '#required' => TRUE,
       '#default_value' => $config->get('service_url'),
     );
 
     return parent::buildForm($form, $form_state);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    parent::validateForm($form, $form_state);
   }
 
   /**
